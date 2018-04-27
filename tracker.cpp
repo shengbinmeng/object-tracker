@@ -3,8 +3,8 @@
 #include "opencv2/tracking.hpp"
 #include "opencv2/objdetect.hpp"
 
-#define AUTO_SELECT_ROI 1
-#define MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
+#define FACE_AUTO_DETECT 1
+#define FACE_MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
 
 using namespace cv;
 using namespace std;
@@ -87,13 +87,16 @@ int main(int argc, char **argv)
 	Mat frame;
 	Rect2d roi;
 	int frameIndex = 0;
-	int autoSelect = AUTO_SELECT_ROI;
-	if (autoSelect) {
+	int autoDetect = FACE_AUTO_DETECT;
+	if (autoDetect) {
 		while (video.read(frame)) {
 			// Detect a face as ROI.
-			int ret = detectFace(frame, roi, MODEL_FILE);
+			int ret = detectFace(frame, roi, FACE_MODEL_FILE);
 			if (ret < 0) {
 				// No ROI for this frame.
+				putText(frame, "No ROI yet", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+				imshow("tracking", frame);
+				waitKey(25);
 				frameIndex++;
 			} else {
 				break;
@@ -105,6 +108,7 @@ int main(int argc, char **argv)
 	}
 
 	if (roi.area() == 0) {
+		printf("No ROI selected.\n");
 		return -1;
 	}
 
@@ -125,7 +129,7 @@ int main(int argc, char **argv)
 			// Draw the tracked object.
 			rectangle(frame, roi, Scalar(255, 0, 0), 2, 1);
 		} else {
-			putText(frame, "Tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+			putText(frame, "Tracking failure", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
 		}
 		// Display tracker type on frame.
 		putText(frame, trackerType + " tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 255, 0), 2);
