@@ -5,6 +5,7 @@
 
 #define FACE_AUTO_DETECT 1
 #define FACE_MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
+#define ROI_DATA_FILE "roi-data.txt"
 
 using namespace cv;
 using namespace std;
@@ -86,6 +87,10 @@ int main(int argc, char **argv)
 
 	Mat frame;
 	Rect2d roi;
+	FILE *dataFile = fopen(ROI_DATA_FILE, "w");
+	if (dataFile == NULL) {
+		printf("Open data file failed: %s", ROI_DATA_FILE);
+	}
 	int frameIndex = 0;
 	int autoDetect = FACE_AUTO_DETECT;
 	if (autoDetect) {
@@ -95,6 +100,8 @@ int main(int argc, char **argv)
 			if (ret < 0) {
 				// No ROI for this frame.
 				putText(frame, "No ROI yet", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+				fprintf(dataFile, "%d %d %d %d %d\n", frameIndex, 0, 0, 0, 0);
+
 				imshow("tracking", frame);
 				waitKey(25);
 				frameIndex++;
@@ -113,6 +120,7 @@ int main(int argc, char **argv)
 	}
 
 	tracker->init(frame, roi);
+	fprintf(dataFile, "%d %d %d %d %d\n", frameIndex, (int)roi.x, (int)roi.y, (int)roi.width, (int)roi.height);
 	
 	printf("Start the tracking process from frame %d, press 'q' to quit.\n", frameIndex);
 	while (1) {
@@ -128,8 +136,10 @@ int main(int argc, char **argv)
 		if (ok) {
 			// Draw the tracked object.
 			rectangle(frame, roi, Scalar(255, 0, 0), 2, 1);
+			fprintf(dataFile, "%d %d %d %d %d\n", frameIndex, (int)roi.x, (int)roi.y, (int)roi.width, (int)roi.height);
 		} else {
 			putText(frame, "Tracking failure", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+			fprintf(dataFile, "%d %d %d %d %d\n", frameIndex, 0, 0, 0, 0);
 		}
 		// Display tracker type on frame.
 		putText(frame, trackerType + " tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 255, 0), 2);
@@ -140,6 +150,10 @@ int main(int argc, char **argv)
 		if (c == 'q') {
 			break;
 		}
+	}
+
+	if (dataFile) {
+		fclose(dataFile);
 	}
 	return 0;
 }
