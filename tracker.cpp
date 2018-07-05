@@ -1,10 +1,9 @@
 #include <iostream>
+#include <getopt.h>
 #include "opencv2/highgui.hpp"
 #include "opencv2/tracking.hpp"
 #include "opencv2/objdetect.hpp"
 
-#define OBJECT_AUTO_DETECT 1
-#define DETECT_MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
 #define ROI_DATA_FILE "roi-data.txt"
 
 using namespace cv;
@@ -54,22 +53,63 @@ static int detectObject(Mat image, Rect2d &roi, const char* cascadeFileName) {
 int main(int argc, char **argv)
 {
 	string trackerTypes[6] = {"Boosting", "MIL", "KCF", "TLD", "MedianFlow", "GOTURN"};
-	if (argc < 2) {
-		printf("Usage: %s <video_file> [tracker_type]\n"
-			  " [tracker_type] can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCL.\n", argv[0]);
+	string trackerType = trackerTypes[2];
+	char* videoFileName = NULL;
+	char* modelFileName = NULL;
+	char opt;
+	int wrongArgument = 0;
+	while ((opt = getopt(argc, argv, "i:t:m:")) != -1) {
+		if (optarg && optarg[0] == '-') {
+			wrongArgument = 1;
+			printf("Argument starting with '-' is not allowed.\n");
+			break;
+		}
+		switch (opt) {
+			case 'i':
+				videoFileName = optarg;
+				break;
+			case 't':
+				trackerType = string(optarg);
+				break;
+			case 'm':
+				modelFileName = optarg;
+				break;
+			case '?':
+				wrongArgument = 1;
+				break;
+			default:
+				break;
+		}
+	}
+
+	if (!videoFileName) {
+		wrongArgument = 1;
+	}
+
+	if (wrongArgument) {
+		printf("Wrong argument.\n");
+		printf("Usage: %s -i <video_file> [-t tracker_type] [-m model_file]\n"
+			  " 'tracker_type' can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCL.\n"
+			   " If 'model_file' is given, the program will detect an object and track it. Otherwise, you will be asked to select ROI manually.\n", argv[0]);
 		return -1;
 	}
-	char* videoFileName = argv[1];
+
 	VideoCapture video(videoFileName);
 	if (!video.isOpened()) {
 		printf("Open video failed: %s\n", videoFileName);
 		return -1;
 	}
-	string trackerType = trackerTypes[2];
-	if (argc > 2) {
-		trackerType = string(argv[2]);
-	}
 
+	int i;
+	for (i = 0; i < 6; i++) {
+		if (trackerType == trackerTypes[i]) {
+			break;
+		}
+	}
+	if (i == 6) {
+		printf("Unknown tracker type. Will use KCL as default.\n");
+		trackerType = trackerTypes[2];
+	}
 	Ptr<Tracker> tracker;
 	if (trackerType == trackerTypes[0])
 		tracker = TrackerBoosting::create();
@@ -91,11 +131,10 @@ int main(int argc, char **argv)
 		printf("Open data file failed: %s", ROI_DATA_FILE);
 	}
 	int frameIndex = 0;
-	int autoDetect = OBJECT_AUTO_DETECT;
-	if (autoDetect) {
+	if (modelFileName) {
 		while (video.read(frame)) {
 			// Detect an object as ROI.
-			int ret = detectObject(frame, roi, DETECT_MODEL_FILE);
+			int ret = detectObject(frame, roi, modelFileName);
 			if (ret < 0) {
 				// No ROI for this frame.
 				putText(frame, "No ROI yet", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
