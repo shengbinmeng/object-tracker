@@ -3,16 +3,16 @@
 #include "opencv2/tracking.hpp"
 #include "opencv2/objdetect.hpp"
 
-#define FACE_AUTO_DETECT 1
-#define FACE_MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
+#define OBJECT_AUTO_DETECT 1
+#define DETECT_MODEL_FILE "./haarcascades/haarcascade_frontalface_alt.xml"
 #define ROI_DATA_FILE "roi-data.txt"
 
 using namespace cv;
 using namespace std;
 
-static int detectFace(Mat image, Rect2d &roi, const char* cascadeFileName) {
-	CascadeClassifier faceDetector;
-	if (!faceDetector.load(cascadeFileName)) {
+static int detectObject(Mat image, Rect2d &roi, const char* cascadeFileName) {
+	CascadeClassifier objectDetector;
+	if (!objectDetector.load(cascadeFileName)) {
 		printf("Load cascade file failed: %s\n", cascadeFileName);
 		return -1;
 	}
@@ -26,25 +26,24 @@ static int detectFace(Mat image, Rect2d &roi, const char* cascadeFileName) {
 	cvtColor(image, image_gray, COLOR_BGR2GRAY);
 	equalizeHist(image_gray, image_gray);
 
-	vector<Rect> faces;
+	vector<Rect> objects;
 	int width = image.size().width;
 	int height = image.size().height;
 	int smaller = height < width ? height : width;
 	int minSize = smaller * 0.2;
 
-	faceDetector.detectMultiScale(image_gray, faces, 1.1, 5, 0 | CASCADE_SCALE_IMAGE, Size(minSize, minSize));
+	objectDetector.detectMultiScale(image_gray, objects, 1.1, 5, 0 | CASCADE_SCALE_IMAGE, Size(minSize, minSize));
 
-	printf("%lu face(s) detected.\n", faces.size());
+	printf("%lu object(s) detected.\n", objects.size());
 
-	// Draw a circle around every face.
-	for (size_t i = 0; i < faces.size(); i++) {
-		Rect face = faces[i];
-		printf("%d %d %d %d\n", face.x, face.y, face.width, face.height);
+	for (size_t i = 0; i < objects.size(); i++) {
+		Rect object = objects[i];
+		printf("%d %d %d %d\n", object.x, object.y, object.width, object.height);
 	}
 
-	if (faces.size() > 0) {
+	if (objects.size() > 0) {
 		// Give the first one.
-		roi = faces[0];
+		roi = objects[0];
 	} else {
 		return -1;
 	}
@@ -92,11 +91,11 @@ int main(int argc, char **argv)
 		printf("Open data file failed: %s", ROI_DATA_FILE);
 	}
 	int frameIndex = 0;
-	int autoDetect = FACE_AUTO_DETECT;
+	int autoDetect = OBJECT_AUTO_DETECT;
 	if (autoDetect) {
 		while (video.read(frame)) {
-			// Detect a face as ROI.
-			int ret = detectFace(frame, roi, FACE_MODEL_FILE);
+			// Detect an object as ROI.
+			int ret = detectObject(frame, roi, DETECT_MODEL_FILE);
 			if (ret < 0) {
 				// No ROI for this frame.
 				putText(frame, "No ROI yet", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
