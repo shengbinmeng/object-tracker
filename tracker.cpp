@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 	if (wrongArgument) {
 		printf("Wrong argument.\n");
 		printf("Usage: %s -i <video_file> [-t tracker_type] [-m model_file]\n"
-			  " 'tracker_type' can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCL.\n"
+			  " 'tracker_type' can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCF.\n"
 			   " If 'model_file' is given, the program will detect an object and track it. Otherwise, you will be asked to select ROI manually.\n", argv[0]);
 		return -1;
 	}

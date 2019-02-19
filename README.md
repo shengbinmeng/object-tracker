@@ -6,7 +6,7 @@ Usage:
 
 	track -i <video_file> [-t tracker_type] [-m model_file]
 	
-	'tracker_type' can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCL.
+	'tracker_type' can be: Boosting, MIL, KCF, TLD, MedianFlow, GOTURN. Default is KCF.
 	If 'model_file' is given, the program will detect an object and track it. Otherwise, you will be asked to select ROI manually.
 	
 Examples:
