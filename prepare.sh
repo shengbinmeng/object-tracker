@@ -7,7 +7,7 @@ git submodule update --init
 cd opencv
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=./local -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DBUILD_SHARED_LIBS:bool=OFF ..
+cmake -DCMAKE_INSTALL_PREFIX=./local -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_LAPACK:bool=OFF -DBUILD_SHARED_LIBS:bool=OFF ..
 make -j 8
 make install
 cd ../..
